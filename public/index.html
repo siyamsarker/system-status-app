@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>System Status Dashboard</title>
+    <link href="https://fonts.googleapis.com/css?family=Inter:400,600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            background: linear-gradient(135deg, #e0e7ff 0%, #f8fafc 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 480px;
+            margin: 48px auto;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 8px 32px rgba(60,72,100,0.12), 0 1.5px 4px rgba(60,72,100,0.08);
+            padding: 36px 32px 28px 32px;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.2rem;
+            font-weight: 600;
+            letter-spacing: -1px;
+            margin-bottom: 18px;
+            color: #22223b;
+        }
+        #os {
+            text-align: center;
+            color: #4b5563;
+            font-size: 1.08rem;
+            margin-bottom: 28px;
+        }
+        .stat {
+            margin: 22px 0 0 0;
+        }
+        .label {
+            font-weight: 600;
+            color: #22223b;
+            margin-bottom: 7px;
+            font-size: 1.07rem;
+        }
+        .bar {
+            height: 28px;
+            background: #e5e7eb;
+            border-radius: 14px;
+            overflow: hidden;
+            margin-top: 4px;
+            box-shadow: 0 1px 2px rgba(60,72,100,0.04);
+        }
+        .bar-inner {
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1 0%, #22d3ee 100%);
+            text-align: right;
+            color: #fff;
+            padding-right: 14px;
+            line-height: 28px;
+            font-weight: 600;
+            font-size: 1.05rem;
+            transition: width 0.5s cubic-bezier(.4,2.3,.3,1);
+            border-radius: 14px 0 0 14px;
+            box-shadow: 0 1px 4px rgba(99,102,241,0.08);
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #374151;
+            font-size: 1.04rem;
+            margin-top: 6px;
+            margin-bottom: 2px;
+        }
+        @media (max-width: 600px) {
+            .container { padding: 18px 4vw; }
+            h1 { font-size: 1.3rem; }
+        }
+        #loader-overlay {
+            position: fixed;
+            z-index: 9999;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.7s cubic-bezier(.4,2.3,.3,1), visibility 0.7s;
+            overflow: hidden;
+        }
+        #loader-overlay.hide {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .tech-loader-bg {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(120deg, #181c24 0%, #232946 60%, #232946 100%);
+            animation: tech-bg-move 4s linear infinite alternate;
+            z-index: 1;
+        }
+        @keyframes tech-bg-move {
+            0% { filter: hue-rotate(0deg) brightness(1); }
+            100% { filter: hue-rotate(10deg) brightness(1.08);}
+        }
+        .loader-content {
+            text-align: center;
+            color: #fff;
+            z-index: 2;
+            position: relative;
+        }
+        .tech-loader-spinner {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 22px auto;
+        }
+        .tech-loader-ring {
+            stroke-dasharray: 201;
+            stroke-dashoffset: 60;
+            transform-origin: 40px 40px;
+            transition: filter 0.2s;
+        }
+        .tech-loader-percent {
+            position: absolute;
+            left: 0; right: 0; top: 50%; transform: translateY(-50%);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4fd1c5;
+            text-shadow: 0 2px 12px #23294644;
+            letter-spacing: 0.04em;
+            pointer-events: none;
+        }
+        .tech-loader-text {
+            font-size: 1.18rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            margin-top: 12px;
+            color: #e0e7ff;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            position: relative;
+        }
+        .scanline {
+            position: relative;
+            display: inline-block;
+            overflow: hidden;
+        }
+        .scanline::after {
+            content: "";
+            position: absolute;
+            left: 0; top: 0; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent 0%, #4fd1c544 50%, transparent 100%);
+            animation: scanline-move 1.2s linear infinite;
+            pointer-events: none;
+        }
+        @keyframes scanline-move {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        .loader-spinner2 {
+            margin: 0 auto 18px auto;
+            width: 64px;
+            height: 64px;
+            position: relative;
+        }
+        .loader-spinner2 svg {
+            width: 64px;
+            height: 64px;
+        }
+        .loader-path {
+            stroke-dasharray: 176;
+            stroke-dashoffset: 0;
+            opacity: 0.2;
+        }
+        .loader-path2 {
+            stroke-dasharray: 176;
+            stroke-dashoffset: 176;
+            animation: dashmove 2s linear infinite;
+        }
+        @keyframes dashmove {
+            0% { stroke-dashoffset: 176; }
+            50% { stroke-dashoffset: 44; }
+            100% { stroke-dashoffset: 176; }
+        }
+        .loader-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+    </style>
+</head>
+<body>
+    <div id="loader-overlay">
+        <div class="tech-loader-bg"></div>
+        <div class="loader-content">
+            <div class="tech-loader-spinner">
+                <svg viewBox="0 0 80 80" width="80" height="80">
+                    <defs>
+                        <linearGradient id="tech-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#4fd1c5"/>
+                            <stop offset="100%" stop-color="#6366f1"/>
+                        </linearGradient>
+                        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                            <feMerge>
+                                <feMergeNode in="coloredBlur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+                    <circle cx="40" cy="40" r="32" fill="none" stroke="#22223b" stroke-width="8" opacity="0.12"/>
+                    <circle class="tech-loader-ring" cx="40" cy="40" r="32" fill="none" stroke="url(#tech-gradient)" stroke-width="6" filter="url(#glow)"/>
+                </svg>
+                <div class="tech-loader-percent" id="loader-percent">0%</div>
+            </div>
+            <div class="tech-loader-text">
+                <span class="scanline">Loading System Status...</span>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <h1>System Status</h1>
+        <div id="os"></div>
+        <div class="stat">
+            <div class="label">CPU Usage</div>
+            <div class="bar"><div id="cpu-bar" class="bar-inner" style="width:0%">0%</div></div>
+        </div>
+        <div class="stat">
+            <div class="label">Memory Usage</div>
+            <div class="bar"><div id="mem-bar" class="bar-inner" style="width:0%">0%</div></div>
+        </div>
+        <div class="stat">
+            <div class="label">Disk Usage</div>
+            <div id="disk-bars"></div>
+        </div>
+        <div class="stat info-row">
+            <span>Private IPv4</span>
+            <span id="private-ipv4"></span>
+        </div>
+        <div class="stat info-row">
+            <span>Private IPv6</span>
+            <span id="private-ipv6"></span>
+        </div>
+        <div class="stat info-row">
+            <span>Public IPv4</span>
+            <span id="public-ipv4"></span>
+        </div>
+        <div class="stat info-row">
+            <span>Public IPv6</span>
+            <span id="public-ipv6"></span>
+        </div>
+        <div class="stat info-row">
+            <span>Uptime</span>
+            <span id="uptime"></span>
+        </div>
+        <div class="stat info-row">
+            <span>Processes</span>
+            <span id="processes"></span>
+        </div>
+        <div class="stat info-row">
+            <span>Network Usage</span>
+            <span id="network"></span>
+        </div>
+    </div>
+    <footer style="text-align:center; margin-top:32px; color:#6b7280; font-size:1rem; letter-spacing:0.02em;">
+        Design and Develop by Siyam Sarker
+    </footer>
+    <script>
+        function formatUptime(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = Math.floor(seconds % 60);
+            return `${h}h ${m}m ${s}s`;
+        }
+
+        function formatBytes(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            let k = 1024, sizes = ['KB', 'MB', 'GB', 'TB'], i = Math.floor(Math.log(bytes) / Math.log(k));
+            return (bytes / Math.pow(k, i)).toFixed(2) + ' ' + sizes[i - 1];
+        }
+
+        async function fetchStatus() {
+            const res = await fetch('/api/status');
+            const data = await res.json();
+
+            document.getElementById('os').innerText = `OS: ${data.os.distro} (${data.os.platform}) ${data.os.release}`;
+
+            // CPU
+            document.getElementById('cpu-bar').style.width = data.cpu + '%';
+            document.getElementById('cpu-bar').innerText = data.cpu.toFixed(1) + '%';
+
+            // Memory
+            const memUsedPercent = (data.mem.used / data.mem.total) * 100;
+            document.getElementById('mem-bar').style.width = memUsedPercent + '%';
+            document.getElementById('mem-bar').innerText = memUsedPercent.toFixed(1) + '%';
+
+            // Disk (simplified)
+            const diskUsedGB = (data.disk.used / 1024 / 1024 / 1024).toFixed(1);
+            const diskTotalGB = (data.disk.total / 1024 / 1024 / 1024).toFixed(1);
+            const diskUsedPercent = (data.disk.used / data.disk.total) * 100;
+            let diskHtml = `
+                <div class="info-row" style="margin-bottom:2px;">
+                    <span>${diskUsedGB}GB / ${diskTotalGB}GB</span>
+                    <span>${diskUsedPercent.toFixed(1)}%</span>
+                </div>
+                <div class="bar"><div class="bar-inner" style="width:${diskUsedPercent}%"></div></div>
+            `;
+            document.getElementById('disk-bars').innerHTML = diskHtml;
+
+            // Private/Public IPv4/IPv6
+            document.getElementById('private-ipv4').innerText = data.privateIpv4 || 'N/A';
+            document.getElementById('private-ipv6').innerText = data.privateIpv6 || 'N/A';
+            document.getElementById('public-ipv4').innerText = data.publicIpv4 || 'N/A';
+            document.getElementById('public-ipv6').innerText = data.publicIpv6 || 'N/A';
+
+            // Uptime
+            document.getElementById('uptime').innerText = formatUptime(data.uptime);
+
+            // Processes
+            document.getElementById('processes').innerText = data.processes;
+
+            // Network
+            document.getElementById('network').innerText = `Received: ${formatBytes(data.network.rx)}, Sent: ${formatBytes(data.network.tx)}`;
+        }
+
+        fetchStatus();
+        setInterval(fetchStatus, 3000);
+
+        // Modern tech loader with percentage and animated ring
+        window.addEventListener('DOMContentLoaded', function() {
+            let percent = 0;
+            const percentElem = document.getElementById('loader-percent');
+            const loaderOverlay = document.getElementById('loader-overlay');
+            const duration = 3000; // 3 seconds
+            const interval = 50; // ms
+            const increment = 100 / (duration / interval);
+
+            const ring = document.querySelector('.tech-loader-ring');
+            let angle = 0;
+
+            const timer = setInterval(() => {
+                percent += increment;
+                if (percent >= 100) {
+                    percent = 100;
+                    clearInterval(timer);
+                    loaderOverlay.classList.add('hide');
+                }
+                percentElem.innerText = Math.floor(percent) + '%';
+
+                // Animate ring rotation for tech feel
+                angle += 8;
+                ring.style.transform = `rotate(${angle}deg)`;
+            }, interval);
+        });
+    </script>
+</body>
+</html>
